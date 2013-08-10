@@ -162,7 +162,7 @@ void LedControl::setDigit(int addr, int digit, byte value, boolean dp) {
     if(digit<0 || digit>7 || value>15)
 	return;
     offset=addr*8;
-    v=charTable[value];
+    v=pgm_read_byte(charTable + value);
     if(dp)
 	v|=B10000000;
     status[offset+digit]=v;
@@ -181,10 +181,11 @@ void LedControl::setChar(int addr, int digit, char value, boolean dp) {
     offset=addr*8;
     index=(byte)value;
     if(index >127) {
-	//nothing define we use the space char
-	value=32;
+	    //Nothing defined in our mapping table
+	    //Use ' ' - The space char
+	    value=32;
     }
-    v=charTable[index];
+    v=pgm_read_byte(charTable + index);
     if(dp)
 	v|=B10000000;
     status[offset+digit]=v;

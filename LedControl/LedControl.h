@@ -1,7 +1,10 @@
 /*
- *    LedControl.h - A library for controling Leds with a MAX7219/MAX7221
+ *    LedControl.h - A library for controlling LEDs with a MAX7219/MAX7221
  *    Copyright (c) 2007 Eberhard Fahle
- * 
+ *
+ *    Extended to (attempt to) support all alpha characters.
+ *    Copyright (c) 2013 Brody Kenrick
+ *
  *    Permission is hereby granted, free of charge, to any person
  *    obtaining a copy of this software and associated documentation
  *    files (the "Software"), to deal in the Software without
@@ -37,24 +40,96 @@
  * Segments to be switched on for characters and digits on
  * 7-Segment Displays
  */
-const static byte charTable[128] = {
+
+//aaaaaa
+//f    b
+//fggggb
+//e    c
+//eddddc [dec]p
+//   pabcdefg
+//#define QUESTION_MARK_OWN_DP
+
+static const byte PROGMEM charTable[128] = {
+    // Numbers : 0 .. 7
     B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,
+    // Numbers : 89AbcdEF
     B01111111,B01111011,B01110111,B00011111,B00001101,B00111101,B01001111,B01000111,
+    //Non-printable
     B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
     B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-    B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-    B00000000,B00000000,B00000000,B00000000,B10000000,B00000001,B10000000,B00000000,
+    // ' ' (space), '!'                                                    '(apostrophe)
+    B00000000,B10100000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000010,
+    // '(', '(', '*', '+'
+    B00000000,B00000000,B00000000,B00000000,
+    //',' '-' '.'/
+    B10000000,B00000001,B10000000,
+    // '/'
+    B00000000,
+    //
+    // Characters of numbers : '0' .. '7'
     B01111110,B00110000,B01101101,B01111001,B00110011,B01011011,B01011111,B01110000,
-    B01111111,B01111011,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-    B00000000,B01110111,B00011111,B00001101,B00111101,B01001111,B01000111,B00000000,
-    B00110111,B00000000,B00000000,B00000000,B00001110,B00000000,B00000000,B00000000,
-    B01100111,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-    B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00001000,
-    B00000000,B01110111,B00011111,B00001101,B00111101,B01001111,B01000111,B00000000,
-    B00110111,B00000000,B00000000,B00000000,B00001110,B00000000,B00000000,B00000000,
-    B01100111,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-    B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000
+    //
+    // Characters of numbers : '8' and '9'
+    B01111111,B01111011,
+    //':', ';', '<', '=', '>'
+    B00000110,B00000110,B00000000,B00001001,B00000000,
+    
+    //'?' (BAD) [If we can make the preceding DP on instead (externally)....]
+#if defined(QUESTION_MARK_OWN_DP)
+    B11100101,
+#else
+    B01100101,
+#endif //defined(QUESTION_MARK_OWN_DP)
+    //
+    // '@'
+    B00000000,
+    //'A', 'B'>'b' .. 'F'
+    B01110111,B00011111,B01001110,B00111101,B01001111,B01000111,
+    //'G'>'g'
+    B01111011,
+    //
+    //'H', 'I', 'J',
+    B00110111,B00110000,B00111100,
+    //'K'>k (BAD)
+    B00001111,
+    //'L'
+    B00001110,
+    //'M'>'n' (BAD) 'N'>'n' 'O'
+    B00010101,B00010101,B01111110,
+    //'P'
+    B01100111,B01110011,B00000101,B01011011,B00001111,B00111110,
+    //'V'>'U', 'W'>'U' (BAD)
+    B00111110,B00111110,
+    //
+    // 'X'>'H' (BAD) , 'Y'>'y', 'Z' 
+    B00110111,B00111011,B01101101,
+    //'[' (interpreted as first half of double letter M), '\', ']' (interpreted as second half of double letter M) , '^' .. '_'
+    B01100110,B00000000,B01110010,B00000000,B00001000,
+    // '`'
+    B00000000,
+    // 'a', ,f,
+    B01110111,B00011111,B00001101,B00111101,B01001111,B01000111,
+    //'g'
+    B01111011,
+    //
+    // 'h',   'i',     'j'
+    B00010111,B00010000,B00111100,
+    //'k' (BAD)
+    B00001111,B00001110,
+    //'m'>'n' (BAD), 'n', 'o'
+    B00010101,B00010101,B00011101,
+    //'p'
+    B01100111,B01110011,B00000101,B01011011,B00001111,B00011100,
+    // 'v'>'u', 'w'>'u' (BAD)
+    B00011100,B00011100,
+    //
+    // 'x'>'H' (BAD), 'y', 'z'
+    B00110111,B00111011,B01101101,
+    // '{' (interpreted as first half of double letter W), '|', '}' (interpreted as second half of double letter M), '~', DEL
+    B00011110,B00000110,B00111100,B01000000,B00000000
 };
+
+
 
 class LedControl {
  private :
