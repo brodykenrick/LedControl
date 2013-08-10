@@ -1,4 +1,3 @@
-
 Modified LedControl
 ==========
 Added a greater range of characters.
@@ -10,7 +9,7 @@ LedControl is an [Arduino](http://arduino.cc) library for MAX7219 and MAX7221 Le
 
 Documentation
 -------------
-The documentation is build using [Sphinx](http://sphinx-doc.org/) and made available Online 
+The documentation is built using [Sphinx](http://sphinx-doc.org/) and made available Online 
 by the great [Read The Docs](http://readthedocs.org/) project.
 
 Download
