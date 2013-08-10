@@ -1,3 +1,9 @@
+
+Modified LedControl
+==========
+Added a greater range of characters.
+
+
 LedControl
 ==========
 LedControl is an [Arduino](http://arduino.cc) library for MAX7219 and MAX7221 Led display drivers.
