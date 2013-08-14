@@ -36,6 +36,9 @@
 #include <WProgram.h>
 #endif
 
+//I don't use/test the LED matrix options so I am disabling that code
+#define NO_LED_MATRIX
+
 /*
  * Segments to be switched on for characters and digits on
  * 7-Segment Displays
@@ -47,7 +50,7 @@
 //e    c
 //eddddc [dec]p
 //   pabcdefg
-//#define QUESTION_MARK_OWN_DP
+
 
 static const byte PROGMEM charTable[128] = {
     // Numbers : 0 .. 7
@@ -73,13 +76,8 @@ static const byte PROGMEM charTable[128] = {
     B01111111,B01111011,
     //':', ';', '<', '=', '>'
     B00000110,B00000110,B00000000,B00001001,B00000000,
-    
-    //'?' (BAD) [If we can make the preceding DP on instead (externally)....]
-#if defined(QUESTION_MARK_OWN_DP)
-    B11100101,
-#else
+    //'?' (BADish) [But we can make the preceding DP on instead (externally) which looks pretty good....]
     B01100101,
-#endif //defined(QUESTION_MARK_OWN_DP)
     //
     // '@'
     B00000000,
@@ -94,11 +92,11 @@ static const byte PROGMEM charTable[128] = {
     B00001111,
     //'L'
     B00001110,
-    //'M'>'n' (BAD) 'N'>'n' 'O'
+    //'M'>'n' (BAD- but if repeated looks OK) 'N'>'n' 'O'
     B00010101,B00010101,B01111110,
     //'P'
     B01100111,B01110011,B00000101,B01011011,B00001111,B00111110,
-    //'V'>'U', 'W'>'U' (BAD)
+    //'V'>'U', 'W'>'U' (BAD- but if repeated looks OK)
     B00111110,B00111110,
     //
     // 'X'>'H' (BAD) , 'Y'>'y', 'Z' 
@@ -116,11 +114,11 @@ static const byte PROGMEM charTable[128] = {
     B00010111,B00010000,B00111100,
     //'k' (BAD)
     B00001111,B00001110,
-    //'m'>'n' (BAD), 'n', 'o'
+    //'m'>'n' (BAD - but if repeated looks OK), 'n', 'o'
     B00010101,B00010101,B00011101,
     //'p'
     B01100111,B01110011,B00000101,B01011011,B00001111,B00011100,
-    // 'v'>'u', 'w'>'u' (BAD)
+    // 'v'>'u', 'w'>'u' (BAD - but if repeated looks OK)
     B00011100,B00011100,
     //
     // 'x'>'H' (BAD), 'y', 'z'
@@ -130,8 +128,17 @@ static const byte PROGMEM charTable[128] = {
 };
 
 
+#define DOUBLE_CHAR_UPPERCASE_M_LHS  ('[')
+#define DOUBLE_CHAR_UPPERCASE_M_RHS  (']')
 
-class LedControl {
+#define DOUBLE_CHAR_UPPERCASE_W_LHS  ('{')
+#define DOUBLE_CHAR_UPPERCASE_W_RHS  ('}')
+
+#define DIGITS_PER_DISPLAY (8)
+#define DIGITS_PER_DISPLAY_STR (DIGITS_PER_DISPLAY+1) //'\0' terminated
+
+class LedControl
+{
  private :
     /* The array for shifting the data to the devices */
     byte spidata[16];
@@ -150,6 +157,10 @@ class LedControl {
     int maxDevices;
     
  public:
+ 
+
+
+ 
     /* 
      * Create a new controler 
      * Params :
@@ -200,7 +211,7 @@ class LedControl {
      * addr	address of the display to control
      */
     void clearDisplay(int addr);
-
+#if !defined(NO_LED_MATRIX)
     /* 
      * Set the status of a single Led.
      * Params :
@@ -231,7 +242,7 @@ class LedControl {
      *		corresponding Led.
      */
     void setColumn(int addr, int col, byte value);
-
+#endif
     /* 
      * Display a hexadecimal digit on a 7-Segment Display
      * Params:
@@ -244,10 +255,11 @@ class LedControl {
 
     /* 
      * Display a character on a 7-Segment display.
-     * There are only a few characters that make sense here :
-     *	'0','1','2','3','4','5','6','7','8','9','0',
-     *  'A','b','c','d','E','F','H','L','P',
-     *  '.','-','_',' ' 
+     * Tries to represent all characters. Some look bad but all are represented.
+     * See charTable to see what is set.
+     * Also note that some single characters are overloaded to be used
+     *  for creating better double character representation of letters
+     *  For example '[' ']' and '{' '}' are used to represent half of W and M
      * Params:
      * addr	address of the display
      * digit	the position of the character on the display (0..7)
@@ -255,6 +267,37 @@ class LedControl {
      * dp	sets the decimal point.
      */
     void setChar(int addr, int digit, char value, boolean dp);
+    
+/* 
+     * Display a string of characters on a 7-Segment display.
+     * Tries to represent all characters but there are some that are just plain impossible.
+     * See charTable to see what is set.
+     * Params:
+     * addr	    address of the display
+     * text     Text to be used
+     * decimals If the decimal point is set
+     * max_length_of_in_arrays
+     * duration_ms - Time in milliseconds to display the message (per 8 characters to display -- longer strings scroll and thus need more time)
+     * delay_function - The function to be used for sleeping between characters (allows code that doesn't have busy use of delay() -- tested for low power operations with Narcoleptic)
+     */
+    void setDisplayAndScroll(int addr, const char * text, const boolean * decimals, int max_length_of_in_arrays,
+                             unsigned long duration_ms, void (*delay_function)(unsigned long  duration_ms)   );
+
+/* 
+     * Static heper function that:
+     * Modifies a string to better be shown on a 7-Segment display.
+     * Doubles some characters -- w == uu, m == nn.
+     * Moves decimal points back onto preceding letter  ("42.195"  is only 5 characters as the 2 has its DP set).
+     * Uses special letters for W and M.
+     * Puts the DP of a '?' onto preceding letter.
+     *
+     * Params:
+     * in_text     Text to be modified
+     * out_text     Modified text
+     * out_decimals Modified texts DPs
+     * length_of_out_arrays
+     */
+    void static modify_string_for_better_display(const char * in_text, char * out_text, boolean * out_decimals, int length_of_out_arrays);
 };
 
 #endif	//LedControl.h
