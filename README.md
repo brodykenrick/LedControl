@@ -1,6 +1,6 @@
 Modified LedControl
 ==========
-Added a greater range of characters.
+Added a greater range of characters. Support for double-wide characters (like M and W).
 
 
 LedControl
