@@ -277,7 +277,7 @@ class LedControl
      * text     Text to be used
      * decimals If the decimal point is set
      * max_length_of_in_arrays
-     * duration_ms - Time in milliseconds to display the message (per 8 characters to display -- longer strings scroll and thus need more time)
+     * duration_ms - Time in milliseconds to display the message (For first 8 characters to display -- longer strings scroll and thus need more time)
      * delay_function - The function to be used for sleeping between characters (allows code that doesn't have busy use of delay() -- tested for low power operations with Narcoleptic)
      */
     void setDisplayAndScroll(int addr, const char * text, const boolean * decimals, int max_length_of_in_arrays,

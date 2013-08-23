@@ -197,7 +197,7 @@ void LedControl::setChar(int addr, int digit, char value, boolean dp) {
 
 
 //TODO: Make this happen "inline" in the other functions, so we don't need to have a big buffer and two steps
-//A static helper function
+//A static helper function that changes some characters to others that are better representations
 void LedControl::modify_string_for_better_display(const char * in_text, char * out_text, boolean * out_decimals, int length_of_out_arrays)
 {
     //Clear
@@ -284,16 +284,17 @@ void LedControl::modify_string_for_better_display(const char * in_text, char * o
   }
 }
 
-
-
-
+#define EACH_SCREEN_DWELL_PER_DIGIT_PERCENT       (115) //!< Percent of duration_ms/DIGITS_PER_DISPLAY wanted for each screen
+#define FIRST_SCREEN_EXTRA_DWELL_PERCENT          (55)  //!< Percent of duration_ms wanted in addition for the first screen
+#define LAST_SCREEN_EXTRA_DWELL_PERCENT           (50)  //!< Percent of duration_ms wanted in addition for the last screen
+//TODO: Extend to multiple displays
 void LedControl::setDisplayAndScroll(int addr, const char * text, const boolean * decimals, int max_length_of_in_arrays /*TODO:: Remove this...*/,
                                      unsigned long duration_ms, void (*delay_function)(unsigned long  duration_ms) /*Make delay() if NULL*/   )
 {
   int text_offset    = 0;
   int digits_left    = strlen(text);
   
-  //One "screen"
+  //One "screen" - simple display
   //TODO: Add centering?
   if(digits_left <= (DIGITS_PER_DISPLAY))
   {
@@ -318,15 +319,9 @@ void LedControl::setDisplayAndScroll(int addr, const char * text, const boolean 
     boolean to_display_decimals[DIGITS_PER_DISPLAY];
 //    Serial.print( "Digits over  =" );
 //    Serial.println( num_digits_over_screen );
-    unsigned long duration_ms_old = duration_ms;
-    
-    duration_ms_old *=  90;
-    duration_ms_old /= 100;
-    
-    duration_ms = ((num_digits_over_screen / DIGITS_PER_DISPLAY) +1) * (duration_ms_old);
-    duration_ms += ((num_digits_over_screen % DIGITS_PER_DISPLAY)) * (duration_ms_old/DIGITS_PER_DISPLAY);
-//    Serial.print( "Duration = " );
-//    Serial.println( duration_ms );
+    unsigned long first_screen_extra_duration_ms = (duration_ms * FIRST_SCREEN_EXTRA_DWELL_PERCENT)/100;
+    unsigned long last_screen_extra_duration_ms  = (duration_ms * LAST_SCREEN_EXTRA_DWELL_PERCENT)/100;
+    unsigned long each_screen_duration_ms  = (((duration_ms * EACH_SCREEN_DWELL_PER_DIGIT_PERCENT)/DIGITS_PER_DISPLAY)/100);
     
     for(int j = 0; j < num_digits_over_screen+1; j++)
     {
@@ -336,17 +331,17 @@ void LedControl::setDisplayAndScroll(int addr, const char * text, const boolean 
         to_display_text[i+1]   = '\0'; //Wasteful but beats two loops
         to_display_decimals[i] = decimals[i+j];
       }
-      this->setDisplayAndScroll(addr, to_display_text, to_display_decimals, max_length_of_in_arrays, duration_ms/ num_digits_over_screen, delay_function);
+      this->setDisplayAndScroll(addr, to_display_text, to_display_decimals, max_length_of_in_arrays, each_screen_duration_ms, delay_function);
       if(j==0)
       {
         // An extra pause at the start of the scrolling message
         //Sleeping but the screen is still active
-        delay_function( duration_ms_old/10 + duration_ms / num_digits_over_screen );
+        delay_function( first_screen_extra_duration_ms );
       }
     }
     // An extra pause at the end of the scrolling message
     //Sleeping but the screen is still active
-    delay_function( duration_ms_old/10 + 2*duration_ms / num_digits_over_screen );
+    delay_function( last_screen_extra_duration_ms );
   }
 }
 
