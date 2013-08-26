@@ -123,7 +123,7 @@ PROGMEM const char * const startup_texts[] =
 
 const char loop_text_00[] PROGMEM        = "Test Text 00";
 const char loop_text_01[] PROGMEM        = "Test Text 01";
-const char loop_text_02[] PROGMEM        = "Test Text 02 is very much longer than the others....";
+const char loop_text_02[] PROGMEM        = "Test Text 02 is Very Much Longer than the Others....";
 const char loop_text_03[] PROGMEM        = "Short 03";
 
 
