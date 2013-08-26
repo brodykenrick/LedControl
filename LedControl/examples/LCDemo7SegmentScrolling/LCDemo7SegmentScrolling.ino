@@ -123,12 +123,16 @@ PROGMEM const char * const startup_texts[] =
 
 const char loop_text_00[] PROGMEM        = "Test Text 00";
 const char loop_text_01[] PROGMEM        = "Test Text 01";
+const char loop_text_02[] PROGMEM        = "Test Text 02 is very much longer than the others....";
+const char loop_text_03[] PROGMEM        = "Short 03";
 
 
 PROGMEM const char * const loop_texts[] =
 {
   loop_text_00,
   loop_text_01,
+  loop_text_02,
+  loop_text_03,
 };
 #define LOOP_TEXTS_COUNT ( sizeof(loop_texts)/sizeof(loop_texts[0]) )
 
