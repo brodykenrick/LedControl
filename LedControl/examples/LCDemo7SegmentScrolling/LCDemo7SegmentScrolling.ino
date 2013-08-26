@@ -1,8 +1,13 @@
 /* Scrolling messages on a 7-segment display via a MAX7219.
-
-Retro Runner Readout
-http://retrorunnerreadout.blogspot.com
 Copyright 2013 Brody Kenrick.
+
+
+Using modified LEDControl @ https://github.com/brodykenrick/MAX72xx_SPI_Arduino
+
+
+Developed for the Retro Runner Readout
+http://retrorunnerreadout.blogspot.com
+
 
 Hardware
 An Arduino Pro Mini 3v3
